@@ -34,7 +34,6 @@ for a in alfas:
 
         N[f"{alfa}{beta}"] = cnt
 
-
 # Calculate the S parameter
 def E(a, b):
     return (N[f"{a}{b}"] + N[f"{a}+90{b}+90"] - N[f"{a}{b}+90"] - N[f"{a}+90{b}"])/(N[f"{a}{b}"] + N[f"{a}+90{b}+90"] + N[f"{a}{b}+90"] + N[f"{a}+90{b}"])
@@ -50,7 +49,37 @@ def S(a, atag, b, btag):
     return abs(E(a, b) + E(atag, b) - E(a, btag) + E(atag, btag))
 
 
+def partial_S(N, a, atag, b, btag):
+    initial_S = S(a, atag, b, btag)
+    partials = {}
+    for key in N.keys():
+        original_value = N[key]
+        if original_value == 0:
+            partials[key] = 0
+            continue
+        delta_N = np.sqrt(original_value)
+        N[key] += delta_N
+        partial_S_value = (S(a, atag, b, btag) - initial_S) / delta_N
+        partials[key] = partial_S_value
+        N[key] = original_value
+    return partials
+
+
+def calculate_delta_S(N, a, atag, b, btag):
+    partials = partial_S(N, a, atag, b, btag)
+    delta_S_squared = sum((np.sqrt(N[key]) * partials[key])**2 for key in N.keys() if N[key] > 0)
+    return np.sqrt(delta_S_squared)
+
+# Calculate delta S
+a = -45
+atag = 0
+b = -225
+btag = 225
+
+delta_S = calculate_delta_S(N, a, atag, b, btag)
+
 # Print final result
-print(S(-45, 0, -225, 225))
+print(f"S: {S(a, atag, b, btag)}")
+print(f"Delta S: {delta_S}")
 
 
